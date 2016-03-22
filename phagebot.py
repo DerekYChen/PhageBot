@@ -164,7 +164,7 @@ while True:
     if findcommand('!quote'):
         name = splitmsg('!quote')
         if not name:
-        	quotefiles = [f for f in os.listdir(quotepath) if not f.startswith('.')]
+            quotefiles = [f for f in os.listdir(quotepath) if not f.startswith('.')]
             quotefile = os.path.join(quotepath, random.choice(quotefiles))
         elif name in ['Derek','Kevin','Nerd','PhageBot']:
             quotefile = os.path.join(quotepath, name + '.txt')
