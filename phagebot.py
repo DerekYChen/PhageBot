@@ -24,7 +24,7 @@ realname = 'PhageBot'
 channel = '#main'
 
 logpath = './../.znc/users/derek/moddata/log'
-quotepath = './quotes'
+quotepath = './quotes/'
 
 #check if running in debug mode
 if args.debug:
@@ -33,7 +33,7 @@ if args.debug:
     realname = 'PhageBot2'
     channel = '#testbot2'
 
-    logpath = './fakelogs'
+    logpath = './fakelogs/'
 
 #other vars
 data = ''
@@ -81,9 +81,7 @@ def sendmsg(msg):
     global data
     msg = str(msg)
     irc.send ("PRIVMSG " + channel + " :" + msg + "\n")
-    datetime = time.strftime('%Y-%m-%d [%H:%M:%S]', time.localtime())
     data = '!' + 'PhageBot' + '@' + channel + ' :' + msg
-    print 'sendmsg' + data
 
 def rtd(num):
     try:
@@ -126,7 +124,7 @@ while True:
         irc.send('JOIN ' + channel + '\n')
         print 'Trying to join server'
     if 'End of /NAMES list' in data:
-        sendmsg('v1.5.5')
+        sendmsg('v1.5.6')
     if 'PING' in data:
         irc.send('PONG ' + data.split()[1] + '\n')
     if findcommand('!8ball'):
@@ -146,13 +144,13 @@ while True:
         if page:
             try:
                 pagenum = int(page)
-                sendmsg(listpages[pagenum])
+                sendmsg('page [' + page + '/' + str(len(listpages)) + ']: ' + listpages[pagenum-1])
             except IndexError:
                 sendmsg('page ' + page + ' does not exist')
             except ValueError:
                 sendmsg(page + ' is not a page number man')
         else:
-            sendmsg(listpages[0])
+            sendmsg('page [1/' + str(len(listpages)) +']: ' + listpages[0])
     if findcommand('!man'):
         cmd = splitmsg('!man').strip()
         if not cmd:
@@ -165,7 +163,11 @@ while True:
         name = splitmsg('!quote')
         if not name:
             quotefiles = [f for f in os.listdir(quotepath) if not f.startswith('.')]
-            quotefile = os.path.join(quotepath, random.choice(quotefiles))
+            if quotefiles:
+                quotefile = os.path.join(quotepath, random.choice(quotefiles))
+            else:
+                sendmsg('no stored quotes m8')
+                continue
         elif name in ['Derek','Kevin','Nerd','PhageBot']:
             quotefile = os.path.join(quotepath, name + '.txt')
         else:
