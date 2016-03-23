@@ -67,6 +67,7 @@ manual = {
 
 #helper functions
 def findcommand(command):
+    if data.startswith('!' + 'PhageBot'): return False
     datasplit = data.split(channel + ' :')
     return datasplit[1].startswith(command + '\r\n') or datasplit[1].startswith(command + ' ') if len(datasplit) > 1 else False
 
@@ -124,7 +125,7 @@ while True:
         irc.send('JOIN ' + channel + '\n')
         print 'Trying to join server'
     if 'End of /NAMES list' in data:
-        sendmsg('v1.5.6')
+        sendmsg('v1.5.7')
     if 'PING' in data:
         irc.send('PONG ' + data.split()[1] + '\n')
     if findcommand('!8ball'):
