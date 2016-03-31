@@ -62,7 +62,7 @@ manual = {
     'man' : 'pls',
     'quote' : '!quote [name] - returns random stored quote of [name], random stored quote if name empty',
     'random' : '!random - spits out a "random" quote from logs of #main',
-    'rtd' : '!rtd [num] - returns random integer between 1 and num, num defaults to 20'
+    'rtd' : '!rtd [num1]d[num2] - simulates rolling a num2-face die num1 times. defaults to 1d20'
 }
 
 #helper functions
@@ -84,11 +84,16 @@ def sendmsg(msg):
     irc.send ("PRIVMSG " + channel + " :" + msg + "\n")
     data = '!' + 'PhageBot' + '@' + channel + ' :' + msg
 
-def rtd(num):
+def rtd(inp):
     try:
-        num = int(num)
-        return random.randint(1,num)
-    except ValueError:
+    	ans = ''
+    	roll = inp.split('d')
+    	numrolls = int(roll[0])
+    	die = int(roll[1])
+    	for i in xrange(0,min(10,numrolls)):
+    		ans = ans + str(random.randint(1,die)) + ' '
+        return ans
+    except (IndexError, ValueError):
         return 'rtfm u fukin tard'
 
 def randomquote():
@@ -116,16 +121,16 @@ listpages = [' '.join(commands[i:i+perpage]) for i in xrange(0,len(commands),per
 
 #main loop
 while True:
+    if args.debug and data:
+        print data
     lastdata = data
     data = irc.recv(4096)
-    if args.debug and data:
-        print 'last' + lastdata
-        print 'curr' + data
     if 'End of message of the day' in data:
         irc.send('JOIN ' + channel + '\n')
         print 'Trying to join server'
+        irc.send('OPER PhageBot myopiceps' + "\n")
     if 'End of /NAMES list' in data:
-        sendmsg('v1.5.7')
+        sendmsg('v1.6.0')
     if 'PING' in data:
         irc.send('PONG ' + data.split()[1] + '\n')
     if findcommand('!8ball'):
@@ -182,6 +187,6 @@ while True:
             sendmsg('no fukn quotes for ' + name + ' yet')
     if findcommand('!rtd'):
         inp = splitmsg('!rtd')
-        sendmsg(rtd(inp)) if inp else sendmsg(rtd(20))
+        sendmsg(rtd(inp)) if inp else sendmsg(rtd('1d20'))
     if findcommand('!random'):
         sendmsg(randomquote())
