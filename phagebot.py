@@ -4,11 +4,13 @@ import random
 import re
 import socket
 import time
+from mcstatus import MinecraftServer
 
 #command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--server', help='Hostname/IP of IRC server the bot should connect to')
 parser.add_argument('--debug', help='Runs script in debug mode, on channel #testbot2', action='store_true')
+parser.add_argument('--mcserver', help='Hostname/IP of Minecraft server the bot should poll for information')
+parser.add_argument('--server', help='Hostname/IP of IRC server the bot should connect to')
 args = parser.parse_args()
 
 #config vars
@@ -22,6 +24,7 @@ nick = 'PhageBot'
 uname = 'PhageBot'
 realname = 'PhageBot'
 channel = '#main'
+mcserverip = args.mcserver if args.mcserver else -1
 
 logpath = './../.znc/users/derek/moddata/log'
 quotepath = './quotes/'
@@ -60,6 +63,7 @@ manual = {
     'grab' : '!grab - grabs last message sent and stores it for !quote',
     'list' : '!list [num] - displays num-th page of the list of commands, defaults to first page',
     'man' : 'pls',
+    'mcstatus' : '!mcstatus - checks online status of phage MC server',
     'quote' : '!quote [name] - returns random stored quote of [name], random stored quote if name empty',
     'random' : '!random - spits out a "random" quote from logs of #main',
     'rtd' : '!rtd [num1]d[num2] - simulates rolling a num2-face die num1 times. defaults to 1d20'
@@ -119,6 +123,9 @@ commands = ['!' + command for command in list(manual.keys())]
 perpage = 10
 listpages = [' '.join(commands[i:i+perpage]) for i in xrange(0,len(commands),perpage)]
 
+#init mc server
+mcserver = MinecraftServer.lookup(mcserverip)
+
 #main loop
 while True:
     if args.debug and data:
@@ -130,7 +137,7 @@ while True:
         print 'Trying to join server'
         irc.send('OPER PhageBot myopiceps' + "\n")
     if 'End of /NAMES list' in data:
-        sendmsg('v1.6.0')
+        sendmsg('v1.7.0')
     if 'PING' in data:
         irc.send('PONG ' + data.split()[1] + '\n')
     if findcommand('!8ball'):
@@ -165,6 +172,18 @@ while True:
             sendmsg(manual[cmd])
         else:
             sendmsg("the fuck is " + cmd)
+    if findcommand('!mcstatus'):
+        if mcserverip != -1:
+            try:
+                numplayers = mcserver.status().players.online
+                if (numplayers > 0):
+                    sendmsg("currently online: {0}".format(", ".join(mcserver.query().players.names)))
+                else:
+                    sendmsg("no one is online")
+            except IOError:
+                sendmsg('could not connect to mc server')
+        else:
+            sendmsg("no MC server ip during config")
     if findcommand('!quote'):
         name = splitmsg('!quote')
         if not name:
